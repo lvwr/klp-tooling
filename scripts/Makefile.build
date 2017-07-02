@@ -287,6 +287,11 @@ objtool_dep = $(objtool_obj)					\
 	      $(wildcard include/config/orc/unwinder.h		\
 			 include/config/stack/validation.h)
 
+ifdef CONFIG_LIVEPATCH
+cmd_livepatch = $(if $(LIVEPATCH_$(basetarget).o),			\
+	$(shell touch $(MODVERDIR)/$(basetarget).livepatch))
+endif
+
 define rule_cc_o_c
 	$(call echo-cmd,checksrc) $(cmd_checksrc)			  \
 	$(call cmd_and_fixdep,cc_o_c)					  \
@@ -320,6 +325,7 @@ $(single-used-m): $(obj)/%.o: $(src)/%.c $(recordmcount_source) $(objtool_dep) F
 	$(call if_changed_rule,cc_o_c)
 	@{ echo $(@:.o=.ko); echo $@; \
 	   $(cmd_undef_syms); } > $(MODVERDIR)/$(@F:.o=.mod)
+	$(call cmd_livepatch)
 
 quiet_cmd_cc_lst_c = MKLST   $@
       cmd_cc_lst_c = $(CC) $(c_flags) -g -c -o $*.o $< && \
